@@ -1,0 +1,28 @@
+// массив назначенных тасков
+// по дефолту статус у всех ASSIGNED
+// выставляемые статусы:
+// ON_WAY(выставляется тогда, когда работник выехал)
+// IN_PROGRESS(выставляется тогда, когда работник начал выезжать)
+// DONE(закончил выполнять)
+// при изменении статуса выставляются соответствующие таймстампы
+// при изменении статуса делается запрос HTTP POST: /{taskAssignmentId} с двумя параметрами: status и note
+// значения status: on_way, start, completed
+// значение note равно null для всех изменений статуса, кроме completed-это комментарий работника
+[
+    {
+        "taskId": 1,
+        "taskAssignmentId": 1,
+        "priority":{
+            "priorityName": "Средний",
+            "priorityLevel": 2
+        },
+        "completionTime": 1.5,
+        "status": "ASSIGNED",
+        "assignment_timestamp": "timestamp",
+        "on_way_timestamp": null,
+        "start_timestamp": null,
+        "completion_timestamp": null,
+        "longitude": 10,
+        "latitude": 10
+    },
+]

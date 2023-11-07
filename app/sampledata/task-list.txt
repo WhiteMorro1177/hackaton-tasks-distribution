@@ -1,0 +1,59 @@
+
+    Task List
+
+ !!! DO NOT FOCUS ON DESIGN !!!
+
++ 1. Registration
++    - Activity with input fields (login, password)
++    - Button ( onClick() send login and password on server)
++    - After OK response from server save data about registration (no need to enter login and password every time)
++    - After saving data call Main Activity
+
+2. Replace values on template
++    - Home -> Tasks
++        -- Contains list of available tasks
+        -- (feature) Add dialog for every task to check more specific information
++   - Gallery -> Map
+        -- Map with addresses of every task (connect yandex maps)
+        -- Some kind of labels at the task's address (with more information)
+        -- Calculate the shortest path through all labels
+
+3. Create profile
+    - Personal information
+        -- Name
+        -- Phone number
+
+4. Notifications
+    - When user get new task
+    - When user close to active task ??? think about
+
+5. Different layouts for different size of devices
+
+
+    To think about
+
+1. How to change status
+    - By hand (user change status for himself)
+        -- Some kind of button or chooser
+        -- Maybe on the profile page
+
+        // uncomfortable to user, but easy to create
+
+    - By program
+        -- If user is very close to task's address, status changed
+
+        // user may be close, but doesn't perform task
+
+    - By notification (By user and program)
+        -- Program calculate user position
+        -- When user close to task's address, he gets a notification
+
+        // i like this, but this is the hardest one
+
+2. What kind of user data needs to be stored
+    - isLogInRecently, for skipping authentication
+    - Username, for profile
+    // Maybe something else
+
+3. For design
+    - Editing profile (picture, username, etc.)
