@@ -1,4 +1,4 @@
-package ru.alt.tasksdistribution.http
+package ru.alt.tasksdistribution.requests
 
 import android.util.Log
 import java.io.BufferedReader
@@ -6,12 +6,13 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 
-class Http {
-    private val serverIP = "94.139.254.37"
+object Http {
+    private const val serverIP = "94.139.254.37"
     private val response = StringBuffer()
 
-    fun sendGet(path: String, params: List<String>?): StringBuffer {
+    fun sendGet(path: String, params: Map<String, String?>?): StringBuffer {
         var serverUrl = "https://$serverIP/$path"
         var reqParams: String? = null
 
@@ -21,7 +22,6 @@ class Http {
         }
 
         with(URL(serverUrl).openConnection() as HttpURLConnection) {
-            // optional default is GET
             requestMethod = "POST"
 
             if (reqParams != null) {
@@ -48,8 +48,8 @@ class Http {
         return response
     }
 
-    fun sendPost(path: String, params: List<String>): StringBuffer {
-        val serverUrl = URL("https://$serverIP/$path")
+    fun sendPost(path: String, params: Map<String, String?>): StringBuffer {
+        val serverUrl = URL("https://$serverIP$path")
         val reqParams: String = createRequestParameters(params)
 
         with (serverUrl.openConnection() as HttpURLConnection) {
@@ -68,18 +68,13 @@ class Http {
                     response.append(inputLine)
                     inputLine = it.readLine()
                 }
+                println("Response : $response")
             }
         }
         return response
     }
 
-    private fun createRequestParameters(input: List<String>): String {
-        var result: String = input[0]
-        if (input.size > 1) {
-            for (i in 2..input.size) {
-                result += "&${input[i]}"
-            }
-        }
-        return result
-    }
+    private fun String.utf8(): String = URLEncoder.encode(this, "UTF-8")
+    private fun createRequestParameters(input: Map<String, String?>): String = input.map { (key, value) -> { "${key.utf8()}=${value.toString().utf8()}" } }.joinToString("&")
+
 }

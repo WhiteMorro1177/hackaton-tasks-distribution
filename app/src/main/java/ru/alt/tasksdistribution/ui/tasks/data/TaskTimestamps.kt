@@ -4,7 +4,7 @@ import java.util.Date
 
 data class TaskTimestamps (
     val assignmentTimestamp: Date?,
-    val onWayTimestamp: Date?,
-    val startTimestamp: Date?,
-    val completionTimestamp: Date?,
+    var onWayTimestamp: Date?,
+    var startTimestamp: Date?,
+    var completionTimestamp: Date?,
 )

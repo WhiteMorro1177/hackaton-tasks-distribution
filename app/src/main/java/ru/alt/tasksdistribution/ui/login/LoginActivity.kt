@@ -3,28 +3,28 @@ package ru.alt.tasksdistribution.ui.login
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import ru.alt.tasksdistribution.MainActivity
-import ru.alt.tasksdistribution.databinding.ActivityLoginBinding
-
 import ru.alt.tasksdistribution.R
+import ru.alt.tasksdistribution.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
 
-    private lateinit var mainActivityIntent: Intent;
+    private lateinit var mainActivityIntent: Intent
+    private var isLoggedRecently: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,18 +33,12 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        // get data from external storage
         val sharedPref = this.getSharedPreferences("userData", Context.MODE_PRIVATE)
-        val isLoggedRecently = sharedPref.getBoolean("isLoggedRecently", false)
+        mainActivityIntent = Intent(this@LoginActivity, MainActivity::class.java)
+            .putExtra("id", sharedPref.getString("id", null))
+            .putExtra("displayName", sharedPref.getString("displayName", "unknown"))
+            .putExtra("login", sharedPref.getString("login", "unknown"))
 
-        mainActivityIntent = Intent(this, MainActivity::class.java)
-        mainActivityIntent.apply {
-            if (isLoggedRecently) {
-                extras?.putString("displayName", sharedPref.getString("displayName", "unknown"))
-                extras?.putString("login", sharedPref.getString("login", "unknown"))
-                startActivity(this)
-            }
-        }
 
         val username = binding.username
         val password = binding.password
@@ -80,15 +74,8 @@ class LoginActivity : AppCompatActivity() {
             setResult(Activity.RESULT_OK)
 
             //Complete and destroy login activity once successful
+            finish()
 
-            with (sharedPref.edit()) {
-                putBoolean("isLoggedRecently", true)
-                putString("id", loginResult.success?.userId.toString())
-                putString("login", loginResult.success?.email)
-                putString("displayName", loginResult.success?.displayName)
-                apply()
-            }
-            startActivity(mainActivityIntent)
         })
 
         username.afterTextChanged {
@@ -122,6 +109,41 @@ class LoginActivity : AppCompatActivity() {
                 loginViewModel.login(username.text.toString(), password.text.toString())
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // get data from shared preferences
+        val sharedPref = this.getSharedPreferences("userData", Context.MODE_PRIVATE)
+        isLoggedRecently = sharedPref.getBoolean("isLoggedRecently", false)
+
+        if (isLoggedRecently) {
+            startActivity(mainActivityIntent)
+        }
+
+    }
+
+    override fun onDestroy() {
+
+        val sharedPref = this.getSharedPreferences("userData", Context.MODE_PRIVATE)
+
+        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
+            val loginResult = it ?: return@Observer
+
+            // write login data to shared preferences
+            with (sharedPref.edit()) {
+                putBoolean("isLoggedRecently", true)
+                putString("id", loginResult.success?.userId.toString())
+                putString("login", loginResult.success?.email)
+                putString("displayName", loginResult.success?.displayName)
+                apply()
+            }
+        })
+
+        startActivity(mainActivityIntent)
+
+        super.onDestroy()
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {

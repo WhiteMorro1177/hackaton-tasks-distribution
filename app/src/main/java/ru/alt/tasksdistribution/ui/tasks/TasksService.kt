@@ -19,7 +19,7 @@ object TasksService {
                     priorityLevel = it
                 ),
                 completionTime = 1.5,
-                status = TaskStatus.IN_PROGRESS,
+                status = TaskStatus.ASSIGNED,
                 timestamps = TaskTimestamps(
                     assignmentTimestamp = Date(),
                     onWayTimestamp = null,

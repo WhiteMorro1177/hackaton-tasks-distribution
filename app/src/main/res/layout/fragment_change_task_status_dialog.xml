@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.tasks.dialog.ChangeTaskStatusDialogFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/costriantLayoutDialogBase"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvDialogTaskTheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Task Theme"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textIsSelectable="false"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvDialogSetStatusLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Set new status: "
+            android:textIsSelectable="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayoutDialogTaskStatus" />
+
+        <Button
+            android:id="@+id/btnDialogOnWay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="On way"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="@+id/btnDialogInProgress"
+            app:layout_constraintEnd_toStartOf="@+id/btnDialogInProgress"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/btnDialogInProgress" />
+
+        <Button
+            android:id="@+id/btnDialogInProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:enabled="false"
+            android:text="In progress"
+            android:textIsSelectable="false"
+            app:layout_constraintEnd_toStartOf="@+id/btnDialogDone"
+            app:layout_constraintStart_toEndOf="@+id/btnDialogOnWay"
+            app:layout_constraintTop_toBottomOf="@+id/tvDialogSetStatusLabel" />
+
+        <Button
+            android:id="@+id/btnDialogDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Done"
+            android:textIsSelectable="false"
+            app:layout_constraintBottom_toBottomOf="@+id/btnDialogInProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnDialogInProgress"
+            app:layout_constraintTop_toTopOf="@+id/btnDialogInProgress" />
+
+        <LinearLayout
+            android:id="@+id/linearLayoutDialogTaskStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="@+id/tvDialogTaskTheme"
+            app:layout_constraintStart_toStartOf="@+id/tvDialogTaskTheme"
+            app:layout_constraintTop_toBottomOf="@+id/tvDialogTaskTheme">
+
+            <TextView
+                android:id="@+id/tvDialogStatusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current status: "
+                android:textIsSelectable="false" />
+
+            <TextView
+                android:id="@+id/tvDialogStatusValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="STATUS"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textIsSelectable="false" />
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/etDialogBase"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnDialogInProgress">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDialogTaskComment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Add comment for completed task" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

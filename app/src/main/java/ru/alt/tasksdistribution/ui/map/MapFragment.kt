@@ -1,6 +1,7 @@
 package ru.alt.tasksdistribution.ui.map
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +30,7 @@ import com.yandex.runtime.Error
 import com.yandex.runtime.network.NetworkError
 import com.yandex.runtime.network.RemoteError
 import ru.alt.tasksdistribution.databinding.FragmentMapBinding
+import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
 
 class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
 
@@ -48,16 +50,9 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         MapKitFactory.setApiKey("fa5b23ab-d690-4a12-a49f-d546d6aefc56")
-
         MapKitFactory.initialize(context)
-
-        // val mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
 
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -76,8 +71,8 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
                     routeStartPosition = location.position
 
                     val screenCenter = Point(
-                        (routeStartPosition!!.latitude + ROUTE_END_LOCATION.latitude) / 2,
-                        (routeStartPosition!!.longitude + ROUTE_END_LOCATION.longitude) / 2
+                        (routeStartPosition!!.latitude) / 2,
+                        (routeStartPosition!!.longitude) / 2
                     )
                     mapView.map.move(CameraPosition(screenCenter, 10.0f, 0.0f, 0.0f))
                     submitRequest()
@@ -86,13 +81,6 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
 
             override fun onLocationStatusUpdated(locationStatus: LocationStatus) {}
         }
-
-
-
-        /*val textView: TextView = binding.textGallery
-        mapViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }*/
         return root
     }
 
@@ -100,29 +88,40 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
         val drivingOptions = DrivingOptions()
         val vehicleOptions = VehicleOptions()
 
+        val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
+
         // alternative routes count
-        drivingOptions.routesCount = 4
-        val requestPoints: ArrayList<RequestPoint> = ArrayList()
+        drivingOptions.routesCount = 1
 
-        // set route points
-        requestPoints.apply {
-            add(RequestPoint(routeStartPosition!!, RequestPointType.WAYPOINT, null))
-            add(RequestPoint(ROUTE_END_LOCATION, RequestPointType.WAYPOINT, null))
-        }
-        // create server request
-        drivingSession = drivingRouter!!.requestRoutes(
-            requestPoints, drivingOptions,
-            vehicleOptions, this
-        )
+        tasksViewModel.taskList.observe(viewLifecycleOwner) {
+            val requestPoints = ArrayList<RequestPoint>()
 
-        // create marker
-        mapView.map.mapObjects.addPlacemark(
-            ROUTE_END_LOCATION
-        ).apply {
-            addTapListener { mapObject, point ->
-                Toast.makeText(context, endLocationDescription, Toast.LENGTH_SHORT).show()
-                true
+            for (task in it) {
+                val taskPoint = Point(task.latitude, task.longitude)
+
+                // set route points
+                requestPoints.add(RequestPoint(
+                    taskPoint,
+                    RequestPointType.WAYPOINT,
+                    task.priority.priorityName,
+                    task.taskId.toString()
+                ))
+
+                // create marker
+                mapView.map.mapObjects.addPlacemark(taskPoint).apply {
+                    addTapListener { mapObject, point ->
+                        // onPlacemarkTap handler
+                        Toast.makeText(context, task.taskId.toString(), Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                }
             }
+
+            // create server request
+            drivingSession = drivingRouter!!
+                .requestRoutes(requestPoints, drivingOptions, vehicleOptions, this@MapFragment)
+
+
         }
     }
 
@@ -131,14 +130,7 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
         MapKitFactory.getInstance().onStart()
         mapView.onStart()
 
-        locationManager.subscribeForLocationUpdates(
-            0.0,
-            1000,
-            1.0,
-            false,
-            FilteringMode.OFF,
-            locationListener
-        )
+        locationManager.subscribeForLocationUpdates(0.0, 1000, 1.0, false, FilteringMode.OFF, locationListener)
     }
 
     override fun onStop() {
@@ -152,24 +144,21 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
         _binding = null
     }
 
-    override fun onDrivingRoutes(list: MutableList<DrivingRoute>) {
-        var color: Int
-        for (i in 0 until list.size) {
-            // configure colors for routes
-            color = COLORS[i]
-
+    override fun onDrivingRoutes(drivingRoutes: MutableList<DrivingRoute>) {
+        for (route in drivingRoutes) {
             // add route to the map
-            mapObjects!!.addPolyline(list[i].geometry).setStrokeColor(color)
+            mapObjects!!.addPolyline(route.geometry).setStrokeColor(0xA200FF)
         }
     }
 
     override fun onDrivingRoutesError(error: Error) {
-        var errorMessage = "Unknown error"
-        if (error is RemoteError) {
-            errorMessage = "Remote error"
-        } else if (error is NetworkError) {
-            errorMessage = "Network error"
+        val errorMessage = when (error) {
+            is RemoteError -> "Remote error"
+            is NetworkError -> "Network error"
+            else -> error.javaClass.name
         }
+
+        Log.d("RoutesError", errorMessage)
         Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
     }
 }

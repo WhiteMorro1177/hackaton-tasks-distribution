@@ -12,19 +12,22 @@
 2. Replace values on template
 +    - Home -> Tasks
 +        -- Contains list of available tasks
-        -- (feature) Add dialog for every task to check more specific information
++        -- Add dialog for every task to change status
+            --- (feature) If status == "DONE" | "IN_PROGRESS" -> delete one path from map
 +   - Gallery -> Map
-        -- Map with addresses of every task (connect yandex maps)
-        -- Some kind of labels at the task's address (with more information)
-        -- Calculate the shortest path through all labels
++        -- Connect yandex maps
++        -- Map with addresses of every task -> address was replaced by coordinates
+#test        -- Calculate the shortest path through all labels
 
-3. Create profile
-    - Personal information
-        -- Name
-        -- Phone number
+3. Replace default values in nav_header_main.xml
+    - To replace
+        -- Picture
+#test        -- Username
+#test        -- Email address
 
-4. Notifications
-    - When user get new task
+
+4. (feature) Notifications
+    - When user get tasks
     - When user close to active task ??? think about
 
 5. Different layouts for different size of devices
@@ -33,9 +36,9 @@
     To think about
 
 1. How to change status
-    - By hand (user change status for himself)
-        -- Some kind of button or chooser
-        -- Maybe on the profile page
++    - By hand (user change status for himself)
++        -- Some kind of button or chooser | dialog
+-        -- Maybe on the profile page
 
         // uncomfortable to user, but easy to create
 
@@ -51,9 +54,13 @@
         // i like this, but this is the hardest one
 
 2. What kind of user data needs to be stored
-    - isLogInRecently, for skipping authentication
-    - Username, for profile
++    - isLogInRecently, for skipping authentication
++    - Username, for profile
     // Maybe something else
 
 3. For design
-    - Editing profile (picture, username, etc.)
+    - Different colors for task statuses
+        -- Red -> ASSIGNED
+        -- Yellow -> ON_WAY
+        -- Blue -> IN_PROGRESS
+        -- Green -> DONE
