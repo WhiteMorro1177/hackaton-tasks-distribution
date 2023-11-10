@@ -14,6 +14,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import ru.alt.tasksdistribution.databinding.ActivityMainBinding
+import ru.alt.tasksdistribution.requests.Http
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(this::class.simpleName, "OnCreate()")
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -42,10 +44,8 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-    }
 
-    override fun onStart() {
-        super.onStart()
+
 
         val extras = intent.extras!!
 
@@ -55,14 +55,27 @@ class MainActivity : AppCompatActivity() {
 
         // set values to user profile
         tvUsername.text = extras.getString("displayName")!!
-        Log.d(this::class.simpleName, extras.getString("displayName")!!)
+        Log.d(this::class.simpleName, "display name = ${extras.getString("displayName")!!}")
+
         tvEmailAddress.text = extras.getString("login")!!
-        Log.d(this::class.simpleName, extras.getString("login")!!)
+        Log.d(this::class.simpleName, "username = ${extras.getString("login")!!}")
 
         // set user id
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
-        tasksViewModel.setUserId(extras.getString("id")!!)
-        Log.d(this::class.simpleName, extras.getString("id")!!)
+
+        val userId = extras.getString("id")!!
+
+        Log.d("MainActivity", "user id = $userId")
+
+        tasksViewModel.setUserId(userId)
+
+        val taskList = Http.execute("GET", "/tasks", "token=$userId").get()
+        Log.d("MainActivity", "taskList = $taskList")
+        tasksViewModel.recyclerView.observe(this) {
+            // it.adapter = TasksAdapter(taskList, this)
+        }
+
+        Log.d(this::class.simpleName, "End OnCreate()")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

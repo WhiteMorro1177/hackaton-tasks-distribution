@@ -1,6 +1,7 @@
 package ru.alt.tasksdistribution.ui.tasks
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,16 +24,19 @@ class TasksFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d(this::class.simpleName, "OnCreateView()")
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
 
         _binding = FragmentTasksBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        tasksViewModel.taskList.observe(viewLifecycleOwner) {
-            val recyclerView = binding.taskList
-            recyclerView.layoutManager = LinearLayoutManager(root.context)
-            recyclerView.adapter = TasksAdapter(it, requireActivity())
-        }
+        val recyclerView = binding.taskList
+        recyclerView.layoutManager = LinearLayoutManager(root.context)
+        recyclerView.adapter = TasksAdapter(emptyList(), requireActivity())
+
+        tasksViewModel.setRecyclerView(recyclerView)
+
+        Log.d(this::class.simpleName, "End OnCreateView()")
         return root
     }
 

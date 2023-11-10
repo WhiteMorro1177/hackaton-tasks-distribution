@@ -1,12 +1,14 @@
 package ru.alt.tasksdistribution.ui.tasks
 
+import android.util.Log
+import ru.alt.tasksdistribution.requests.Http
 import ru.alt.tasksdistribution.ui.tasks.data.Task
 import ru.alt.tasksdistribution.ui.tasks.data.TaskPriority
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 import ru.alt.tasksdistribution.ui.tasks.data.TaskTimestamps
 import java.util.Date
 
-object TasksService {
+class TasksService(val id: String) {
     private var tasks = mutableListOf<Task>()
 
     init {
@@ -30,6 +32,9 @@ object TasksService {
                 latitude = 10.0
             )
         }.toMutableList()
+
+        val response = Http.execute("GET", "/tasks", "token=${id}").get()
+        Log.d("TasksService", "response = $response")
     }
 
     fun getTasks() = tasks

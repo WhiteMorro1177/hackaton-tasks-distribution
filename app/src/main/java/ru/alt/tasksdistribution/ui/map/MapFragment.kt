@@ -30,6 +30,7 @@ import com.yandex.runtime.Error
 import com.yandex.runtime.network.NetworkError
 import com.yandex.runtime.network.RemoteError
 import ru.alt.tasksdistribution.databinding.FragmentMapBinding
+import ru.alt.tasksdistribution.ui.tasks.TasksService
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
 
 class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
@@ -93,10 +94,12 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
         // alternative routes count
         drivingOptions.routesCount = 1
 
-        tasksViewModel.taskList.observe(viewLifecycleOwner) {
+        val taskList = TasksService(tasksViewModel.userId.value.toString()).getTasks()
+
+
             val requestPoints = ArrayList<RequestPoint>()
 
-            for (task in it) {
+            for (task in taskList) {
                 val taskPoint = Point(task.latitude, task.longitude)
 
                 // set route points
@@ -122,7 +125,7 @@ class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
                 .requestRoutes(requestPoints, drivingOptions, vehicleOptions, this@MapFragment)
 
 
-        }
+
     }
 
     override fun onStart() {

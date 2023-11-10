@@ -1,35 +1,26 @@
 package ru.alt.tasksdistribution.requests
 
+import android.os.AsyncTask
 import android.util.Log
 import java.io.BufferedReader
+import java.io.DataOutputStream
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 
-object Http {
-    private const val serverIP = "94.139.254.37"
+object Http : AsyncTask<String, String, String>() {
+    private const val serverIP = "http://192.168.1.59:8080"
     private val response = StringBuffer()
 
-    fun sendGet(path: String, params: Map<String, String?>?): StringBuffer {
-        var serverUrl = "https://$serverIP/$path"
-        var reqParams: String? = null
+    private fun sendGet(path: String, params: String?): String {
+        var serverUrl = "$serverIP$path"
 
         if (params != null) {
-            reqParams = createRequestParameters(params)
-            serverUrl += "?${reqParams}"
+            serverUrl += "?${params}"
         }
 
         with(URL(serverUrl).openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-
-            if (reqParams != null) {
-                OutputStreamWriter(outputStream).apply {
-                    write(reqParams)
-                    flush()
-                }
-            }
+            requestMethod = "GET"
 
             Log.d("ServerRequest", "URL: $url | Response Code: $responseCode")
 
@@ -41,40 +32,53 @@ object Http {
                     response.append(inputLine)
                     inputLine = it.readLine()
                 }
-                println("Response : $response")
             }
+            Log.d("Http", "response = $response")
         }
 
-        return response
+        return simplifyBuffer(response)
     }
 
-    fun sendPost(path: String, params: Map<String, String?>): StringBuffer {
-        val serverUrl = URL("https://$serverIP$path")
-        val reqParams: String = createRequestParameters(params)
+    private fun sendPost(path: String, params: String): String {
+        val serverUrl = URL("$serverIP$path")
 
         with (serverUrl.openConnection() as HttpURLConnection) {
             requestMethod = "POST"
+            doOutput = true
+            setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
 
-            OutputStreamWriter(outputStream).run {
-                write(reqParams)
-                flush()
-            }
+            DataOutputStream(outputStream).use { it.writeBytes(params) }
 
             Log.d("ServerRequest", "URL: $url | Response Code: $responseCode")
 
-            BufferedReader(InputStreamReader(inputStream)).use {
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    response.append(inputLine)
-                    inputLine = it.readLine()
+            BufferedReader(InputStreamReader(inputStream)).use { bufferedReader ->
+                var line: String?
+                while (bufferedReader.readLine().also { line = it } != null) {
+                    response.append(line)
                 }
-                println("Response : $response")
+                Log.d("Http", "response = $response")
             }
         }
-        return response
+        return simplifyBuffer(response)
     }
 
-    private fun String.utf8(): String = URLEncoder.encode(this, "UTF-8")
-    private fun createRequestParameters(input: Map<String, String?>): String = input.map { (key, value) -> { "${key.utf8()}=${value.toString().utf8()}" } }.joinToString("&")
+    private fun simplifyBuffer(buffer: StringBuffer): String {
+        var result = ""
+        for (i in 1 until buffer.capacity() - 1) { result += buffer[i] }
+        return result
+    }
 
+    override fun doInBackground(vararg params: String?): String {
+        val reqType = params[0]!!
+        val reqPath = params[1]!!
+        val reqParams = params[2]
+
+        if (reqType == "GET") {
+            return sendGet(reqPath, reqParams)
+        }
+        if (reqType == "POST") {
+            return sendPost(reqPath, reqParams!!)
+        }
+        return ""
+    }
 }
