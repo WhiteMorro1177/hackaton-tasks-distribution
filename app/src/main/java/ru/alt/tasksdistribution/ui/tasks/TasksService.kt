@@ -33,8 +33,8 @@ class TasksService(val id: String) {
             )
         }.toMutableList()
 
-        val response = Http.execute("GET", "/tasks", "token=${id}").get()
-        Log.d("TasksService", "response = $response")
+        // val response = Http.execute("GET", "/tasks", "token=${id}").get()
+        // Log.d("TasksService", "response = $response")
     }
 
     fun getTasks() = tasks

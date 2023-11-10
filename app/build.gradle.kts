@@ -51,6 +51,7 @@ dependencies {
     implementation("androidx.annotation:annotation:1.6.0")
     implementation("com.yandex.android:maps.mobile:4.4.0-full")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("com.android.volley:volley:1.2.1")
 
 
     testImplementation("junit:junit:4.13.2")

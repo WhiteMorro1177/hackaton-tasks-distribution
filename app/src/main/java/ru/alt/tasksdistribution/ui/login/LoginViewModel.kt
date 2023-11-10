@@ -1,5 +1,6 @@
 package ru.alt.tasksdistribution.ui.login
 
+import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -16,9 +17,9 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
     private val _loginResult = MutableLiveData<LoginResult>()
     val loginResult: LiveData<LoginResult> = _loginResult
 
-    fun login(username: String, password: String) {
+    fun login(context: Context, username: String, password: String) {
         // can be launched in a separate asynchronous job
-        val result = loginRepository.login(username, password)
+        val result = loginRepository.login(context, username, password)
 
         if (result is Result.Success) {
             _loginResult.value =

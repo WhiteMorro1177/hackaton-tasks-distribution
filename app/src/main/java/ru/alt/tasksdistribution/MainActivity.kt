@@ -67,10 +67,10 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("MainActivity", "user id = $userId")
 
-        tasksViewModel.setUserId(userId)
+        // tasksViewModel.setUserId(userId)
 
-        val taskList = Http.execute("GET", "/tasks", "token=$userId").get()
-        Log.d("MainActivity", "taskList = $taskList")
+        // val taskList = Http.execute("GET", "/tasks", "token=$userId").get()
+        // Log.d("MainActivity", "taskList = $taskList")
         tasksViewModel.recyclerView.observe(this) {
             // it.adapter = TasksAdapter(taskList, this)
         }

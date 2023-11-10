@@ -1,5 +1,6 @@
 package ru.alt.tasksdistribution.data
 
+import android.content.Context
 import ru.alt.tasksdistribution.data.model.LoggedInUser
 
 /**
@@ -24,9 +25,9 @@ class LoginRepository(val dataSource: LoginDataSource) {
         dataSource.logout()
     }
 
-    fun login(username: String, password: String): Result<LoggedInUser> {
+    fun login(context: Context, username: String, password: String): Result<LoggedInUser> {
         // handle login
-        val result = dataSource.login(username, password)
+        val result = dataSource.login(context, username, password)
 
         if (result is Result.Success) {
             setLoggedInUser(result.data)

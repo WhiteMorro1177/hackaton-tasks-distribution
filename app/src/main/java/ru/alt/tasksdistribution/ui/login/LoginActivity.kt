@@ -86,10 +86,10 @@ class LoginActivity : AppCompatActivity() {
             }
 
             val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
-            tasksViewModel.setUserId(loginResult.success?.userId.toString())
+            // tasksViewModel.setUserId(loginResult.success?.userId.toString())
 
-            val taskList = Http.execute("GET", "/tasks", "token=${loginResult.success?.userId}").get()
-            tasksViewModel.setTaskList(taskList)
+            //val taskList = Http.execute("GET", "/tasks", "token=${loginResult.success?.userId}").get()
+            //tasksViewModel.setTaskList(taskList)
 
             //Complete and destroy login activity once successful
             finish()
@@ -115,6 +115,7 @@ class LoginActivity : AppCompatActivity() {
                 when (actionId) {
                     EditorInfo.IME_ACTION_DONE ->
                         loginViewModel.login(
+                            context,
                             username.text.toString(),
                             password.text.toString()
                         )
@@ -124,7 +125,7 @@ class LoginActivity : AppCompatActivity() {
 
             login.setOnClickListener {
                 loading.visibility = View.VISIBLE
-                loginViewModel.login(username.text.toString(), password.text.toString())
+                loginViewModel.login(context, username.text.toString(), password.text.toString())
             }
         }
     }
