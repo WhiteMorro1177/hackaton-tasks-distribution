@@ -12,6 +12,7 @@ import ru.alt.tasksdistribution.requests.Http
 import ru.alt.tasksdistribution.ui.map.MapViewModel
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
 import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TaskColors
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
 import java.util.Date
@@ -66,7 +67,7 @@ class ChangeTaskStatusDialog(
             val newStatus = TaskStatus.ON_WAY
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
-            holder.tvTaskStatus.setTextColor(holder.colors["yellow"]!!.toInt())
+            holder.tvTaskStatus.setTextColor(TaskColors.YELLOW.toInt())
 
             task.timestamps.onWayTimestamp = Date().toString()
 
@@ -86,7 +87,8 @@ class ChangeTaskStatusDialog(
                         TaskStatus.ON_WAY,
                         task.timestamps,
                         t.longitude,
-                        t.latitude
+                        t.latitude,
+                        TaskColors.YELLOW
                     ))
                 } else {
                     tl.add(t)
@@ -108,7 +110,7 @@ class ChangeTaskStatusDialog(
             val newStatus = TaskStatus.IN_PROGRESS
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
-            holder.tvTaskStatus.setTextColor(holder.colors["blue"]!!.toInt())
+            holder.tvTaskStatus.setTextColor(TaskColors.BLUE.toInt())
             task.timestamps.startTimestamp = Date().toString()
 
 
@@ -128,7 +130,8 @@ class ChangeTaskStatusDialog(
                         TaskStatus.IN_PROGRESS,
                         task.timestamps,
                         t.longitude,
-                        t.latitude
+                        t.latitude,
+                        TaskColors.BLUE
                     ))
                 } else {
                     tl.add(t)
@@ -149,7 +152,7 @@ class ChangeTaskStatusDialog(
             val newStatus = TaskStatus.DONE
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
-            holder.tvTaskStatus.setTextColor(holder.colors["green"]!!.toInt())
+            holder.tvTaskStatus.setTextColor(TaskColors.GREEN.toInt())
             task.timestamps.completionTimestamp = Date().toString()
             val note = when (etTaskComment.text.toString()) {
                 "" -> "Task finished"
@@ -173,7 +176,8 @@ class ChangeTaskStatusDialog(
                         TaskStatus.DONE,
                         task.timestamps,
                         t.longitude,
-                        t.latitude
+                        t.latitude,
+                        TaskColors.GREEN
                     ))
                 } else {
                     tl.add(t)

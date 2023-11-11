@@ -11,4 +11,5 @@ data class Task(
     val timestamps: TaskTimestamps, // data class
     val longitude: Double,
     val latitude: Double,
+    val statusColor: Long
 )

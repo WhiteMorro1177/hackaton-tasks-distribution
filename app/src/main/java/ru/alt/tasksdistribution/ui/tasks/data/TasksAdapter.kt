@@ -14,13 +14,6 @@ class TasksAdapter(val tasks: List<Task>, private val activity: FragmentActivity
         val tvTaskTheme = binding.tvTaskTheme
         val tvTaskStatus = binding.tvTaskStatus
         val layoutListItem = binding.layoutListItem
-
-        val colors = mapOf(
-            "red" to 0xffff0000,
-            "green" to 0xff00ff00,
-            "blue" to 0xff00ffff,
-            "yellow" to 0xffffff00
-        )
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TasksViewHolder {
@@ -36,7 +29,7 @@ class TasksAdapter(val tasks: List<Task>, private val activity: FragmentActivity
 
         holder.tvTaskTheme.text = task.taskName
         holder.tvTaskStatus.text = task.status.name
-        holder.tvTaskStatus.setTextColor(holder.colors["red"]!!.toInt())
+        holder.tvTaskStatus.setTextColor(task.statusColor.toInt())
         holder.layoutListItem.setOnClickListener {
             // open dialog
             ChangeTaskStatusDialog(activity, holder, task).show()

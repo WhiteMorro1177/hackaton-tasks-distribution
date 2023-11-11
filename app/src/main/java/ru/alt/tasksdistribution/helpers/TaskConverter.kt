@@ -1,6 +1,7 @@
 package ru.alt.tasksdistribution.helpers
 
 import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TaskColors
 import ru.alt.tasksdistribution.ui.tasks.data.TaskDTO
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 import ru.alt.tasksdistribution.ui.tasks.data.TaskTimestamps
@@ -22,6 +23,7 @@ object TaskConverter {
             completionTimestamp = null,
         ),
         longitude = toConvert.longitude,
-        latitude = toConvert.latitude
+        latitude = toConvert.latitude,
+        statusColor = TaskColors.RED
     )
 }
