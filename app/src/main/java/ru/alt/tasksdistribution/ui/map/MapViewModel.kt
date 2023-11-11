@@ -11,6 +11,7 @@ class MapViewModel : ViewModel() {
     val taskList: LiveData<List<Task>> get() = _taskList
 
     fun setTaskList(taskList: List<Task>) {
+        _taskList.value = emptyList()
         _taskList.value = taskList
     }
 

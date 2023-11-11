@@ -13,7 +13,6 @@ class TasksAdapter(val tasks: List<Task>, private val activity: FragmentActivity
     class TasksViewHolder(binding: ItemTasksBinding) : RecyclerView.ViewHolder(binding.root) {
         val tvTaskTheme = binding.tvTaskTheme
         val tvTaskStatus = binding.tvTaskStatus
-        val tvDestinationToTask = binding.tvDestinationToTask
         val layoutListItem = binding.layoutListItem
 
         val colors = mapOf(
@@ -35,7 +34,7 @@ class TasksAdapter(val tasks: List<Task>, private val activity: FragmentActivity
     override fun onBindViewHolder(holder: TasksViewHolder, position: Int) {
         val task = tasks[position]
 
-        holder.tvTaskTheme.text = "Task No.${task.taskId}"
+        holder.tvTaskTheme.text = task.taskName
         holder.tvTaskStatus.text = task.status.name
         holder.tvTaskStatus.setTextColor(holder.colors["red"]!!.toInt())
         holder.layoutListItem.setOnClickListener {

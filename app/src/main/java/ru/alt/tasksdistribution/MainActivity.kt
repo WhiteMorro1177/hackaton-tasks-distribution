@@ -13,11 +13,19 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.android.volley.RequestQueue.RequestEvent
 import com.google.android.material.navigation.NavigationView
+import com.google.gson.Gson
 import ru.alt.tasksdistribution.databinding.ActivityMainBinding
 import ru.alt.tasksdistribution.helpers.PermissionsManager
+import ru.alt.tasksdistribution.helpers.TaskConverter
+import ru.alt.tasksdistribution.requests.Http
 import ru.alt.tasksdistribution.ui.map.MapViewModel
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
+import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TaskDTO
+import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
+import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
@@ -84,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         tvEmailAddress.text = extras.getString("username")!!
 
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
-        val mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
 
         // set user id
         val userId = extras.getString("uuid")!!

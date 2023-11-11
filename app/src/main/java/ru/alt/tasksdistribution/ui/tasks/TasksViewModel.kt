@@ -17,6 +17,7 @@ class TasksViewModel : ViewModel() {
         _userId.value = UUID.fromString(userId)
     }
     fun setTaskList(taskList: List<Task>) {
+        _taskList.value = emptyList()
         _taskList.value = taskList
     }
 }
