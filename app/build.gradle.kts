@@ -49,9 +49,17 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
     implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
     implementation("androidx.annotation:annotation:1.6.0")
-    implementation("com.yandex.android:maps.mobile:4.4.0-full")
-    implementation("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation("androidx.preference:preference-ktx:1.2.0")
     implementation("com.android.volley:volley:1.2.1")
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    implementation("com.squareup.retrofit2:retrofit:2.4.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.4.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:3.4.1")
+    implementation("com.squareup.okhttp3:okhttp:3.10.0")
+
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
+    implementation("com.github.MKergall:osmbonuspack:6.3")
 
 
     testImplementation("junit:junit:4.13.2")

@@ -2,9 +2,9 @@ package ru.alt.tasksdistribution.ui.tasks.data
 
 import java.util.Date
 
-data class TaskTimestamps (
-    val assignmentTimestamp: Date?,
-    var onWayTimestamp: Date?,
-    var startTimestamp: Date?,
-    var completionTimestamp: Date?,
+data class TaskTimestamps(
+    val assignmentTimestamp: String,
+    var onWayTimestamp: String?,
+    var startTimestamp: String?,
+    var completionTimestamp: String?,
 )

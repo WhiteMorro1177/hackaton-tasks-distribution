@@ -5,11 +5,20 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.RequestQueue
+import com.google.gson.Gson
 import ru.alt.tasksdistribution.databinding.FragmentTasksBinding
+import ru.alt.tasksdistribution.helpers.TaskConverter
+import ru.alt.tasksdistribution.requests.Http
+import ru.alt.tasksdistribution.ui.map.MapViewModel
+import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TaskDTO
 import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
+import java.util.UUID
 
 class TasksFragment : Fragment() {
     private val tag = this::class.simpleName
@@ -26,17 +35,61 @@ class TasksFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         Log.d(tag, "OnCreateView()")
-        val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
+        val tasksViewModel: TasksViewModel = ViewModelProvider(requireActivity())[TasksViewModel::class.java]
+        val mapViewModel: MapViewModel = ViewModelProvider(requireActivity())[MapViewModel::class.java]
 
         _binding = FragmentTasksBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val recyclerView = binding.taskList
-        recyclerView.layoutManager = LinearLayoutManager(root.context)
-        recyclerView.adapter = TasksAdapter(emptyList(), requireActivity())
+        var userId: UUID? = null
+        binding.btnRefresh.setOnClickListener {
+            try {
+                tasksViewModel.userId.observe(viewLifecycleOwner) { uuid ->
+                    userId = uuid
+                }
 
-        tasksViewModel.setRecyclerView(recyclerView)
+                with (Http(requireContext())) {
+                    getTasks(userId.toString()).also {
+                        it.addRequestEventListener { request, event ->
+                            if (event == RequestQueue.RequestEvent.REQUEST_FINISHED) {
+                                Log.d(tag, "Extracted response = ${this.jsonResponse}")
+                                request.tag = "DONE"
 
+                                // parse response
+                                val taskList = arrayListOf<Task>()
+
+                                for (index in 0 until this.jsonResponse!!.length()) {
+                                    Log.d(tag, "Item $index: data: ${this.jsonResponse!![index]} ")
+
+                                    taskList.add(
+                                        TaskConverter.convert(
+                                            Gson().fromJson(jsonResponse!![index].toString(), TaskDTO::class.java)
+                                        )
+                                    )
+                                }
+
+                                binding.taskList.apply {
+                                    layoutManager = LinearLayoutManager(root.context)
+                                    adapter = TasksAdapter(taskList, requireActivity())
+                                    binding.btnRefresh.visibility = View.GONE
+                                    visibility = View.VISIBLE
+                                }
+
+                                Log.d(tag, "Task list = $taskList")
+
+                                tasksViewModel.setTaskList(taskList)
+                                mapViewModel.setTaskList(taskList)
+
+                                it.cancelAll("DONE")
+                            }
+                        }
+                    }
+                }
+            } catch (exc: Throwable) {
+                Log.e(tag, exc.message!!)
+                Toast.makeText(context, "Wait until tasks downloaded", Toast.LENGTH_LONG).show()
+            }
+        }
         Log.d(tag, "End OnCreateView()")
         return root
     }

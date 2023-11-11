@@ -6,162 +6,176 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.RequestPoint
-import com.yandex.mapkit.RequestPointType
-import com.yandex.mapkit.directions.DirectionsFactory
-import com.yandex.mapkit.directions.driving.DrivingOptions
-import com.yandex.mapkit.directions.driving.DrivingRoute
-import com.yandex.mapkit.directions.driving.DrivingRouter
-import com.yandex.mapkit.directions.driving.DrivingSession
-import com.yandex.mapkit.directions.driving.VehicleOptions
-import com.yandex.mapkit.geometry.Point
-import com.yandex.mapkit.location.FilteringMode
-import com.yandex.mapkit.location.Location
-import com.yandex.mapkit.location.LocationListener
-import com.yandex.mapkit.location.LocationManager
-import com.yandex.mapkit.location.LocationStatus
-import com.yandex.mapkit.map.CameraPosition
-import com.yandex.mapkit.map.MapObjectCollection
-import com.yandex.mapkit.mapview.MapView
-import com.yandex.runtime.Error
-import com.yandex.runtime.network.NetworkError
-import com.yandex.runtime.network.RemoteError
+import org.osmdroid.api.IMapController
+import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.RoadManager
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.ScaleBarOverlay
+import org.osmdroid.views.overlay.compass.CompassOverlay
+import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import ru.alt.tasksdistribution.R
 import ru.alt.tasksdistribution.databinding.FragmentMapBinding
-import ru.alt.tasksdistribution.ui.tasks.TasksService
-import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
+import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
+import kotlin.concurrent.thread
 
-class MapFragment : Fragment(), DrivingSession.DrivingRouteListener {
+
+class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
 
     private lateinit var mapView: MapView
-    private var routeStartPosition: Point? = null
 
-    private var mapObjects: MapObjectCollection? = null
-    private var drivingRouter: DrivingRouter? = null
-    private var drivingSession: DrivingSession? = null
-
-    private lateinit var locationManager: LocationManager
-    private lateinit var locationListener: LocationListener
+    private lateinit var mapViewModel: MapViewModel
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        MapKitFactory.setApiKey("fa5b23ab-d690-4a12-a49f-d546d6aefc56")
-        MapKitFactory.initialize(context)
-
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         mapView = binding.mapView
+        mapViewModel = ViewModelProvider(requireActivity())[MapViewModel::class.java]
 
-        // create object for driver route
-        drivingRouter = DirectionsFactory.getInstance().createDrivingRouter()
-        mapObjects = mapView.map.mapObjects.addCollection()
+        mapView = binding.mapView
+        mapView.setZoomRounding(false)
+        mapView.setMultiTouchControls(true)
 
-        // get location
-        locationManager = MapKitFactory.getInstance().createLocationManager()
-        locationListener = object : LocationListener {
-            override fun onLocationUpdated(location: Location) {
-                if (routeStartPosition == null) {
-                    routeStartPosition = location.position
-
-                    val screenCenter = Point(
-                        (routeStartPosition!!.latitude) / 2,
-                        (routeStartPosition!!.longitude) / 2
-                    )
-                    mapView.map.move(CameraPosition(screenCenter, 10.0f, 0.0f, 0.0f))
-                    submitRequest()
+        // for tests
+        /*MyLocationNewOverlay(
+            GpsMyLocationProvider(context), mapView
+        ).apply {
+            enableMyLocation()
+            mapView.overlays.add(this)
+            runOnFirstFix {
+                try {
+                    val mapController: IMapController = mapView.controller
+                    mapController.setZoom(1.0)
+                    val point = GeoPoint(45.035829, 38.975504)
+                    mapController.setCenter(point)
+                } catch (exc: Exception) {
+                    Log.e("osm", "Error ${exc.message}")
                 }
             }
+        }*/
 
-            override fun onLocationStatusUpdated(locationStatus: LocationStatus) {}
+        MyLocationNewOverlay(
+            GpsMyLocationProvider(context), mapView
+        ).apply {
+            enableMyLocation()
+            mapView.overlays.add(this)
+            runOnFirstFix {
+                try {
+                    val latitude = this.myLocation.latitude
+                    val longitude = this.myLocation.longitude
+                    requireActivity().runOnUiThread {
+                        val mapController: IMapController = mapView.controller
+                        mapController.setZoom(1.0)
+                        val point = GeoPoint(latitude, longitude)
+                        mapController.setCenter(point)
+                    }
+                } catch (exc: Exception) {
+                    Log.e("osm", "Error ${exc.message}")
+                }
+            }
+        }
+
+        CompassOverlay(
+            context,
+            InternalCompassOrientationProvider(context),
+            mapView
+        ).apply {
+            enableCompass()
+            mapView.overlays.add(this)
+        }
+
+        ScaleBarOverlay(mapView).apply {
+            setCentred(true)
+            setScaleBarOffset(requireContext().resources.displayMetrics.widthPixels / 2, 10)
+            mapView.overlays.add(this)
+        }
+
+
+        var taskList = listOf<Task>()
+
+        mapViewModel.taskList.observe(requireActivity()) {
+            taskList = it
+        }
+
+        for (task in taskList) {
+            if (task.status != TaskStatus.DONE) {
+                OSRMRoadManager(context).apply {
+                    thread {
+                        val road = this.getRoad(arrayListOf(GeoPoint(mapView.mapCenter), GeoPoint(task.latitude, task.longitude)))
+                        requireActivity().runOnUiThread {
+                            val roadOverlay = RoadManager.buildRoadOverlay(road)
+                            mapView.overlays.add(roadOverlay)
+                            mapView.invalidate()
+                        }
+                    }
+                }
+            }
         }
         return root
     }
 
-    private fun submitRequest() {
-        val drivingOptions = DrivingOptions()
-        val vehicleOptions = VehicleOptions()
-
-        val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
-
-        // alternative routes count
-        drivingOptions.routesCount = 1
-
-        val taskList = TasksService(tasksViewModel.userId.value.toString()).getTasks()
+    /*
 
 
-            val requestPoints = ArrayList<RequestPoint>()
+        var taskList = arrayListOf<Task>()
 
-            for (task in taskList) {
-                val taskPoint = Point(task.latitude, task.longitude)
+        mapViewModel.taskList.observe(requireActivity()) {
+            val requestPoints = arrayListOf<RequestPoint>()
 
-                // set route points
-                requestPoints.add(RequestPoint(
-                    taskPoint,
-                    RequestPointType.WAYPOINT,
-                    task.priority.priorityName,
-                    task.taskId.toString()
-                ))
+            for (task in it) {
+                if (task.status != TaskStatus.DONE) {
 
-                // create marker
-                mapView.map.mapObjects.addPlacemark(taskPoint).apply {
-                    addTapListener { mapObject, point ->
-                        // onPlacemarkTap handler
-                        Toast.makeText(context, task.taskId.toString(), Toast.LENGTH_SHORT).show()
-                        true
+                    val taskPoint = Point(task.latitude, task.longitude)
+
+                    // set route points
+                    requestPoints.add(RequestPoint(
+                        taskPoint,
+                        RequestPointType.WAYPOINT,
+                        task.priorityName,
+                        task.taskId.toString()
+                    ))
+
+                    // create marker
+                    mapView.map.mapObjects.addPlacemark(taskPoint).apply {
+                        addTapListener { _, _ ->
+                            // onPlacemarkTap handler
+                            Toast.makeText(context, task.taskId.toString(), Toast.LENGTH_SHORT).show()
+                            true
+                        }
                     }
                 }
+
+
+                // create server request
+                drivingSession = drivingRouter!!
+                    .requestRoutes(requestPoints, drivingOptions, vehicleOptions, this@MapFragment)
+
+                requestPoints.clear()
             }
+        }
+    }*/
 
-            // create server request
-            drivingSession = drivingRouter!!
-                .requestRoutes(requestPoints, drivingOptions, vehicleOptions, this@MapFragment)
-
-
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-        MapKitFactory.getInstance().onStart()
-        mapView.onStart()
-
-        locationManager.subscribeForLocationUpdates(0.0, 1000, 1.0, false, FilteringMode.OFF, locationListener)
-    }
-
-    override fun onStop() {
-        mapView.onStop()
-        MapKitFactory.getInstance().onStop()
-        super.onStop()
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    override fun onDrivingRoutes(drivingRoutes: MutableList<DrivingRoute>) {
-        for (route in drivingRoutes) {
-            // add route to the map
-            mapObjects!!.addPolyline(route.geometry).setStrokeColor(0xA200FF)
-        }
-    }
-
-    override fun onDrivingRoutesError(error: Error) {
-        val errorMessage = when (error) {
-            is RemoteError -> "Remote error"
-            is NetworkError -> "Network error"
-            else -> error.javaClass.name
-        }
-
-        Log.d("RoutesError", errorMessage)
-        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
     }
 }

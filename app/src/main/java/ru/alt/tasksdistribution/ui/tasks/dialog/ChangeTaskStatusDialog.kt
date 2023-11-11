@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.textfield.TextInputLayout
 import ru.alt.tasksdistribution.R
+import ru.alt.tasksdistribution.requests.Http
 import ru.alt.tasksdistribution.ui.tasks.data.Task
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
@@ -27,13 +28,6 @@ class ChangeTaskStatusDialog(
 
     private var etBase: TextInputLayout
     private var etTaskComment: EditText
-
-
-    private val statusConverter: Map<TaskStatus, String> = mapOf(
-        TaskStatus.ON_WAY to "on_way",
-        TaskStatus.IN_PROGRESS to "start",
-        TaskStatus.DONE to "completed"
-    )
 
     init {
         setContentView(R.layout.fragment_change_task_status_dialog)
@@ -67,10 +61,12 @@ class ChangeTaskStatusDialog(
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
             holder.tvTaskStatus.setTextColor(holder.colors["yellow"]!!.toInt())
-            task.timestamps.onWayTimestamp = Date()
+            task.timestamps.onWayTimestamp = Date().toString()
 
             // send request
-            // val response = Http.sendPost("/${task.taskAssignmentId}", mapOf("status" to statusConverter[newStatus]))
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, "")
+            }
 
             dismiss()
         }
@@ -79,10 +75,12 @@ class ChangeTaskStatusDialog(
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
             holder.tvTaskStatus.setTextColor(holder.colors["blue"]!!.toInt())
-            task.timestamps.startTimestamp = Date()
+            task.timestamps.startTimestamp = Date().toString()
 
             // send request
-            // val response = Http.sendPost("/${task.taskAssignmentId}", mapOf("status" to statusConverter[newStatus]))
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, "")
+            }
 
             dismiss()
         }
@@ -91,20 +89,15 @@ class ChangeTaskStatusDialog(
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
             holder.tvTaskStatus.setTextColor(holder.colors["green"]!!.toInt())
-            task.timestamps.completionTimestamp = Date()
+            task.timestamps.completionTimestamp = Date().toString()
             val note = when (etTaskComment.text.toString()) {
                 "" -> "Task finished"
                 else -> etTaskComment.text.toString()
             }
 
-            // send request
-            /*val response = Http.sendPost(
-                "/${task.taskAssignmentId}",
-                mapOf(
-                    "status" to statusConverter[newStatus],
-                    "note" to note
-                )
-            )*/
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, note)
+            }
 
             dismiss()
         }

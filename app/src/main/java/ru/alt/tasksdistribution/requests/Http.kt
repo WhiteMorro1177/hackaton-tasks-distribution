@@ -1,33 +1,26 @@
 package ru.alt.tasksdistribution.requests
 
 import android.content.Context
-import android.os.Debug
 import android.util.Log
 import com.android.volley.Request
 import com.android.volley.RequestQueue
-import com.android.volley.RequestQueue.RequestEvent
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.DataOutputStream
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.UUID
+import org.json.JSONArray
+import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 
 class Http(private val context: Context) {
     private val tag = this::class.simpleName
     private val serverIP = "http://94.139.254.37:8081"
 
     var uuid: String = "empty"
-    var jsonResponse: JSONObject? = null
+    var jsonResponse: JSONArray? = null
 
     fun sendCredentials(username: String, password: String): RequestQueue {
         return Volley.newRequestQueue(context).apply {
-            this.cancelAll { true }
+            this.cancelAll("DONE")
             val url = "$serverIP/login"
 
             object : StringRequest(
@@ -54,15 +47,15 @@ class Http(private val context: Context) {
 
     fun getTasks(userId: String): RequestQueue {
         return Volley.newRequestQueue(context).apply {
-            this.cancelAll { true }
+            this.cancelAll("DONE")
             val url = "$serverIP/tasks?token=$userId"
 
-            JsonObjectRequest(
+            JsonArrayRequest(
                 Request.Method.GET,
                 url,
                 null,
                 {
-                    Log.d(tag, "respose = $it")
+                    Log.d(tag, "response = $it")
                     jsonResponse = it
                 },
                 {
@@ -70,6 +63,24 @@ class Http(private val context: Context) {
                 }
             ).also { add(it) }
 
+        }
+    }
+
+    fun setStatus(taskId: String, userId: String, newStatus: TaskStatus, note: String): RequestQueue {
+        return Volley.newRequestQueue(context).apply {
+            this.cancelAll("DONE")
+            val url = "$serverIP/task/$taskId?token=$userId&note=$note&status=$newStatus"
+
+            object : StringRequest(
+                Method.GET,
+                url,
+                Response.Listener { response ->
+                    Log.d(tag, "Response = $response")
+                },
+                Response.ErrorListener { error ->
+                    Log.e(tag, "Error in request - $error")
+                }) {
+            }.also { this.add(it) }
         }
     }
 }

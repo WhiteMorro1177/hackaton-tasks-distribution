@@ -12,7 +12,6 @@ class TasksAdapter(val tasks: List<Task>, private val activity: FragmentActivity
 
     class TasksViewHolder(binding: ItemTasksBinding) : RecyclerView.ViewHolder(binding.root) {
         val tvTaskTheme = binding.tvTaskTheme
-        val tvTaskAddress = binding.tvTaskAddress // maybe get from MapFragment
         val tvTaskStatus = binding.tvTaskStatus
         val tvDestinationToTask = binding.tvDestinationToTask
         val layoutListItem = binding.layoutListItem

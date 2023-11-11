@@ -1,12 +1,14 @@
 package ru.alt.tasksdistribution.ui.tasks.data
 
+import java.util.UUID
+
 data class Task(
     val taskId: Number,
-    val taskAssignmentId: Number,
-    val priority: TaskPriority, // create data class
-    val completionTime: Double,
-    val status: TaskStatus, // create enum
-    val timestamps: TaskTimestamps, // create data class
+    val taskName: String,
+    val taskAssignmentId: UUID,
+    val priorityName: String,
+    val status: TaskStatus, // enum
+    val timestamps: TaskTimestamps, // data class
     val longitude: Double,
     val latitude: Double,
 )

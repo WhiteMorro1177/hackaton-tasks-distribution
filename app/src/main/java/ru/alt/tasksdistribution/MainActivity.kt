@@ -1,5 +1,6 @@
 package ru.alt.tasksdistribution
 
+import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -12,15 +13,11 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.android.volley.RequestQueue.RequestEvent
 import com.google.android.material.navigation.NavigationView
 import ru.alt.tasksdistribution.databinding.ActivityMainBinding
-import ru.alt.tasksdistribution.requests.Http
+import ru.alt.tasksdistribution.helpers.PermissionsManager
 import ru.alt.tasksdistribution.ui.map.MapViewModel
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
-import ru.alt.tasksdistribution.ui.tasks.data.Task
-import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
-import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,9 +30,19 @@ class MainActivity : AppCompatActivity() {
         Log.d(tag, "OnCreate()")
         super.onCreate(savedInstanceState)
 
+        val requiredPermissions = arrayOf(
+            Manifest.permission.INTERNET,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        )
+
+        if (!PermissionsManager.checkPermissions(this, requiredPermissions)) {
+            PermissionsManager.requestPermissions(this, requiredPermissions)
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.appBarMain.toolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
@@ -66,40 +73,24 @@ class MainActivity : AppCompatActivity() {
         val tvEmailAddress: TextView = binding.navView.getHeaderView(0).findViewById(R.id.tvEmailAddress)
 
         // set values to user profile
-        tvUsername.text = extras.getString("displayName")!!
-        Log.d(tag, "display name = ${extras.getString("displayName")!!}")
 
-        tvEmailAddress.text = extras.getString("login")!!
-        Log.d(tag, "username = ${extras.getString("login")!!}")
+        val newUsername = extras.getString("username")
+        val newDisplayName = extras.getString("displayName")
+
+        Log.d(tag, "username = $newUsername")
+        Log.d(tag, "display name = $newDisplayName")
+
+        tvUsername.text = newUsername
+        tvEmailAddress.text = extras.getString("username")!!
 
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
+        val mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
 
         // set user id
-        val userId = extras.getString("id")!!
+        val userId = extras.getString("uuid")!!
         Log.d(tag, "user id = $userId")
         tasksViewModel.setUserId(userId)
 
-
-        // get list of tasks
-        with (Http(this)) {
-            getTasks(userId).also {
-                it.addRequestEventListener { _, event ->
-                    if (event == RequestEvent.REQUEST_FINISHED) {
-                        Log.d(tag, "Extracted response = ${this.jsonResponse}")
-
-                        // parse response
-                        val taskList = emptyList<Task>()
-
-                        tasksViewModel.recyclerView.observe(this@MainActivity) { rvTaskList ->
-                            rvTaskList.adapter = TasksAdapter(taskList, this@MainActivity)
-                        }
-                        ViewModelProvider(this@MainActivity)[MapViewModel::class.java].also { mvm ->
-                            mvm.setTaskList(taskList)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

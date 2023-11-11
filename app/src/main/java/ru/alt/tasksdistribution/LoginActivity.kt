@@ -8,12 +8,14 @@ import android.os.Bundle
 import android.transition.Visibility
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import com.android.volley.RequestQueue.RequestEvent
 import ru.alt.tasksdistribution.databinding.ActivityLoginBinding
+import ru.alt.tasksdistribution.helpers.PermissionsManager
 import ru.alt.tasksdistribution.requests.Http
 import java.util.UUID
 
@@ -30,8 +32,14 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (!checkPermissions(context = this)) {
-            requestPermissions(this)
+        val requiredPermissions = arrayOf<String>(
+            Manifest.permission.INTERNET
+        )
+
+        val permissionManager = PermissionsManager
+
+        if (!permissionManager.checkPermissions(context = this, requiredPermissions)) {
+            permissionManager.requestPermissions(activity = this, requiredPermissions)
         }
 
         val etUsername = binding.username
@@ -39,44 +47,45 @@ class LoginActivity : AppCompatActivity() {
         val btnLogin = binding.login
         val pbLoading = binding.loading
 
-        // hardcoded values
-        etUsername.text.append("anton")
-        etPassword.text.append("anton")
-
-
         btnLogin.setOnClickListener {
             pbLoading.visibility = View.VISIBLE
 
             // request
             with (Http(this)) {
                 sendCredentials(etUsername.text.toString(), etPassword.text.toString()).also {
-                    it.addRequestEventListener { _, event ->
+                    it.addRequestEventListener { request, event ->
                         if (event == RequestEvent.REQUEST_FINISHED) {
                             Log.d(tag, "Extracted uuid = $uuid")
+                            request.tag = "DONE"
 
-                            // save data
-                            val sharedPrefs = this@LoginActivity.getSharedPreferences("userData", Context.MODE_PRIVATE)
-                            with (sharedPrefs.edit()) {
-                                putBoolean("isLogged", true)
-                                putString("uuid", uuid)
-                                putString("username", etUsername.text.toString())
-                                putString("displayName", "User${uuid.subSequence(0, 5)}")
-                                apply()
+                            if (this.uuid == "empty") {
+                                Toast.makeText(this@LoginActivity, "Incorrect login or password", Toast.LENGTH_LONG).show()
                             }
+                            else {
+                                // save data
+                                val sharedPrefs = this@LoginActivity.getSharedPreferences("userData", Context.MODE_PRIVATE)
+                                with (sharedPrefs.edit()) {
+                                    putBoolean("isLogged", true)
+                                    putString("uuid", uuid)
+                                    putString("username", etUsername.text.toString())
+                                    putString("displayName", "User${uuid.subSequence(0, 5)}")
+                                    apply()
+                                }
 
-                            mainActivityIntent = Intent(this@LoginActivity, MainActivity::class.java)
-                                .putExtra("username", etUsername.text.toString())
-                                .putExtra("uuid", uuid)
-                                .putExtra("displayName", "User${uuid.subSequence(0, 5)}")
+                                mainActivityIntent = Intent(this@LoginActivity, MainActivity::class.java)
+                                    .putExtra("username", etUsername.text.toString())
+                                    .putExtra("uuid", uuid)
+                                    .putExtra("displayName", "User${uuid.subSequence(0, 5)}")
 
-                            pbLoading.visibility = View.GONE
+                                pbLoading.visibility = View.GONE
 
-                            // call main activity
-                            this@LoginActivity.startActivity(mainActivityIntent)
+                                // call main activity
+                                this@LoginActivity.startActivity(mainActivityIntent)
 
 
-                            Log.d(tag, "Clear queue")
-                            it.cancelAll { true }
+                                Log.d(tag, "Clear queue")
+                            }
+                            it.cancelAll("DONE")
                         }
                     }
                 }
@@ -101,33 +110,5 @@ class LoginActivity : AppCompatActivity() {
             startActivity(mainActivityIntent)
         }
 
-    }
-
-    private fun checkPermissions(context: Context): Boolean {
-        val requestedPermissions = arrayOf(
-            Manifest.permission.INTERNET,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        )
-
-        for (permission in requestedPermissions) {
-            if (ContextCompat.checkSelfPermission(context, permission) != PermissionChecker.PERMISSION_GRANTED) {
-                return false
-            }
-        }
-        return true
-    }
-    private fun requestPermissions(activity: Activity) {
-        ActivityCompat.requestPermissions(
-            activity,
-            arrayOf(
-                Manifest.permission.INTERNET,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ),
-            200
-        )
     }
 }
