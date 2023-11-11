@@ -6,6 +6,7 @@ import android.util.Log
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.RequestQueue.RequestEvent
+import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -17,109 +18,58 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
 
-object Http {
-    private val serverIP = "http://192.168.43.228:8080"
-    private val response = StringBuffer()
+class Http(private val context: Context) {
+    private val tag = this::class.simpleName
+    private val serverIP = "http://94.139.254.37:8081"
 
     var uuid: String = "empty"
-    var result: String? = null
+    var jsonResponse: JSONObject? = null
 
-    fun sendCredentials(context: Context, username: String, password: String): RequestQueue {
-        val url = "$serverIP/login?username=$username&password=$password"
+    fun sendCredentials(username: String, password: String): RequestQueue {
+        return Volley.newRequestQueue(context).apply {
+            this.cancelAll { true }
+            val url = "$serverIP/login"
 
-        val queue = Volley.newRequestQueue(context)
+            object : StringRequest(
+                Method.POST,
+                url,
+                Response.Listener { response ->
+                    Log.d(tag, "Json object = $response")
+                    uuid = response
+                    if (uuid.contains("\"")) { uuid = uuid.subSequence(1, uuid.length - 1).toString() }
+                },
+                Response.ErrorListener { error ->
+                    Log.e(tag, "Error in request - ${error.message}")
+                }) {
 
-        val jsonObjectRequest = JsonObjectRequest(
-            Request.Method.POST, url, null,
-            {
-                result = it.toString()
-                Log.d("Http", result.toString())
-            },
-            {
-                print("error")
-            }
-        )
-
-        queue.add(jsonObjectRequest)
-
-        return queue
-    }
-
-    fun getTasks(context: Context, userId: UUID): Request<String> {
-        val url = "$serverIP/tasks"
-        var resultLength: Int
-
-        val queue = Volley.newRequestQueue(context)
-
-        val stringRequest = StringRequest(Request.Method.POST, url,
-            {
-                try {
-                    val responseObject = JSONObject(it)
-                    resultLength = responseObject.length()
-                } catch (exc: Throwable) {
-                    print(exc.stackTrace)
+                override fun getParams(): Map<String, String> {
+                    return HashMap<String, String>().apply {
+                        this["username"] = username
+                        this["password"] = password
+                    }
                 }
-            },
-            {
-                Log.d("Http", "Request to '/tasks' failed")
-            })
-
-        return queue.add(stringRequest)
+            }.also { this.add(it) }
+        }
     }
 
-    private fun sendGet(path: String, params: String?): String {
-        var serverUrl = "$serverIP$path"
+    fun getTasks(userId: String): RequestQueue {
+        return Volley.newRequestQueue(context).apply {
+            this.cancelAll { true }
+            val url = "$serverIP/tasks?token=$userId"
 
-        if (params != null) {
-            serverUrl += "?${params}"
-        }
-
-        with(URL(serverUrl).openConnection() as HttpURLConnection) {
-            requestMethod = "GET"
-
-            Log.d("ServerRequest", "URL: $url | Response Code: $responseCode")
-
-            BufferedReader(InputStreamReader(inputStream)).use {
-                val response = StringBuffer()
-
-                var inputLine = it.readLine()
-                while (inputLine != null) {
-                    response.append(inputLine)
-                    inputLine = it.readLine()
+            JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                {
+                    Log.d(tag, "respose = $it")
+                    jsonResponse = it
+                },
+                {
+                    Log.e(tag, "Error in request - ${it.message}")
                 }
-            }
-            Log.d("Http", "response = $response")
+            ).also { add(it) }
+
         }
-
-        return simplifyBuffer(response)
-    }
-
-    private fun sendPost(path: String, params: String): String {
-        val serverUrl = URL("$serverIP$path")
-
-        with (serverUrl.openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            doOutput = true
-            setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-
-            DataOutputStream(outputStream).use { it.writeBytes(params) }
-
-            Log.d("ServerRequest", "URL: $url | Response Code: $responseCode")
-
-            BufferedReader(InputStreamReader(inputStream)).use { bufferedReader ->
-                var line: String?
-                while (bufferedReader.readLine().also { line = it } != null) {
-                    response.append(line)
-                }
-                Log.d("Http", "response = $response")
-            }
-        }
-        return simplifyBuffer(response)
-    }
-
-    private fun simplifyBuffer(buffer: StringBuffer): String {
-        var result = ""
-        for (i in 1 until buffer.capacity() - 1) { result += buffer[i] }
-        return result
     }
 }

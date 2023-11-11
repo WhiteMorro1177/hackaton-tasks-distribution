@@ -12,6 +12,7 @@ import ru.alt.tasksdistribution.databinding.FragmentTasksBinding
 import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
 
 class TasksFragment : Fragment() {
+    private val tag = this::class.simpleName
 
     private var _binding: FragmentTasksBinding? = null
 
@@ -24,7 +25,7 @@ class TasksFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d(this::class.simpleName, "OnCreateView()")
+        Log.d(tag, "OnCreateView()")
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
 
         _binding = FragmentTasksBinding.inflate(inflater, container, false)
@@ -36,7 +37,7 @@ class TasksFragment : Fragment() {
 
         tasksViewModel.setRecyclerView(recyclerView)
 
-        Log.d(this::class.simpleName, "End OnCreateView()")
+        Log.d(tag, "End OnCreateView()")
         return root
     }
 

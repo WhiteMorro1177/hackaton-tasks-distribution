@@ -12,18 +12,25 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.android.volley.RequestQueue.RequestEvent
 import com.google.android.material.navigation.NavigationView
 import ru.alt.tasksdistribution.databinding.ActivityMainBinding
 import ru.alt.tasksdistribution.requests.Http
+import ru.alt.tasksdistribution.ui.map.MapViewModel
 import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
+import ru.alt.tasksdistribution.ui.tasks.data.Task
+import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
+import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
+    private val tag = this::class.simpleName
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(this::class.simpleName, "OnCreate()")
+        Log.d(tag, "OnCreate()")
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -45,8 +52,13 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        Log.d(tag, "End OnCreate()")
+    }
 
+    override fun onStart() {
+        super.onStart()
 
+        // get extras
         val extras = intent.extras!!
 
         // bind profile fields
@@ -55,27 +67,39 @@ class MainActivity : AppCompatActivity() {
 
         // set values to user profile
         tvUsername.text = extras.getString("displayName")!!
-        Log.d(this::class.simpleName, "display name = ${extras.getString("displayName")!!}")
+        Log.d(tag, "display name = ${extras.getString("displayName")!!}")
 
         tvEmailAddress.text = extras.getString("login")!!
-        Log.d(this::class.simpleName, "username = ${extras.getString("login")!!}")
+        Log.d(tag, "username = ${extras.getString("login")!!}")
 
-        // set user id
         val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
 
+        // set user id
         val userId = extras.getString("id")!!
+        Log.d(tag, "user id = $userId")
+        tasksViewModel.setUserId(userId)
 
-        Log.d("MainActivity", "user id = $userId")
 
-        // tasksViewModel.setUserId(userId)
+        // get list of tasks
+        with (Http(this)) {
+            getTasks(userId).also {
+                it.addRequestEventListener { _, event ->
+                    if (event == RequestEvent.REQUEST_FINISHED) {
+                        Log.d(tag, "Extracted response = ${this.jsonResponse}")
 
-        // val taskList = Http.execute("GET", "/tasks", "token=$userId").get()
-        // Log.d("MainActivity", "taskList = $taskList")
-        tasksViewModel.recyclerView.observe(this) {
-            // it.adapter = TasksAdapter(taskList, this)
+                        // parse response
+                        val taskList = emptyList<Task>()
+
+                        tasksViewModel.recyclerView.observe(this@MainActivity) { rvTaskList ->
+                            rvTaskList.adapter = TasksAdapter(taskList, this@MainActivity)
+                        }
+                        ViewModelProvider(this@MainActivity)[MapViewModel::class.java].also { mvm ->
+                            mvm.setTaskList(taskList)
+                        }
+                    }
+                }
+            }
         }
-
-        Log.d(this::class.simpleName, "End OnCreate()")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -83,7 +107,6 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
-
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
