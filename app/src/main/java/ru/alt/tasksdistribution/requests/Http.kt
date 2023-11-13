@@ -69,17 +69,25 @@ class Http(private val context: Context) {
     fun setStatus(taskId: String, userId: String, newStatus: TaskStatus, note: String): RequestQueue {
         return Volley.newRequestQueue(context).apply {
             this.cancelAll("DONE")
-            val url = "$serverIP/task/$taskId?token=$userId&note=$note&status=$newStatus"
+            val url = "$serverIP/task/${taskId}"
 
             object : StringRequest(
-                Method.GET,
+                Method.POST,
                 url,
                 Response.Listener { response ->
                     Log.d(tag, "Response = $response")
                 },
                 Response.ErrorListener { error ->
-                    Log.e(tag, "Error in request - $error")
+                    Log.e(tag, "Error in request - Error: ${error.message}")
                 }) {
+
+                override fun getParams(): MutableMap<String, String> {
+                    return HashMap<String, String>().apply {
+                        this["token"] = userId
+                        this["status"] = newStatus.name
+                        this["note"] = note
+                    }
+                }
             }.also { this.add(it) }
         }
     }

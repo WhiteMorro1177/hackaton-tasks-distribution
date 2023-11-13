@@ -7,25 +7,15 @@ import android.view.Menu
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.android.volley.RequestQueue.RequestEvent
 import com.google.android.material.navigation.NavigationView
-import com.google.gson.Gson
 import ru.alt.tasksdistribution.databinding.ActivityMainBinding
 import ru.alt.tasksdistribution.helpers.PermissionsManager
-import ru.alt.tasksdistribution.helpers.TaskConverter
-import ru.alt.tasksdistribution.requests.Http
-import ru.alt.tasksdistribution.ui.map.MapViewModel
-import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
-import ru.alt.tasksdistribution.ui.tasks.data.Task
-import ru.alt.tasksdistribution.ui.tasks.data.TaskDTO
-import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
-import java.util.UUID
+import ru.alt.tasksdistribution.helpers.Storage
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,6 +26,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(tag, "OnCreate()")
+
+        val userId = intent.extras!!.getString("uuid")!!
+        Storage.setId(userId)
+        Log.d(tag, "Set user id: $userId")
+
         super.onCreate(savedInstanceState)
 
         val requiredPermissions = arrayOf(
@@ -81,7 +76,6 @@ class MainActivity : AppCompatActivity() {
         val tvEmailAddress: TextView = binding.navView.getHeaderView(0).findViewById(R.id.tvEmailAddress)
 
         // set values to user profile
-
         val newUsername = extras.getString("username")
         val newDisplayName = extras.getString("displayName")
 
@@ -89,15 +83,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(tag, "display name = $newDisplayName")
 
         tvUsername.text = newUsername
-        tvEmailAddress.text = extras.getString("username")!!
-
-        val tasksViewModel: TasksViewModel = ViewModelProvider(this)[TasksViewModel::class.java]
-
-        // set user id
-        val userId = extras.getString("uuid")!!
-        Log.d(tag, "user id = $userId")
-        tasksViewModel.setUserId(userId)
-
+        tvEmailAddress.text = newDisplayName
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

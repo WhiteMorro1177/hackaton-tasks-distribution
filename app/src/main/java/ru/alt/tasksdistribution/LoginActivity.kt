@@ -68,14 +68,14 @@ class LoginActivity : AppCompatActivity() {
                                     putBoolean("isLogged", true)
                                     putString("uuid", uuid)
                                     putString("username", etUsername.text.toString())
-                                    putString("displayName", "User${uuid.subSequence(0, 5)}")
+                                    putString("displayName", "User-${uuid.subSequence(0, 5)}")
                                     apply()
                                 }
 
                                 mainActivityIntent = Intent(this@LoginActivity, MainActivity::class.java)
                                     .putExtra("username", etUsername.text.toString())
                                     .putExtra("uuid", uuid)
-                                    .putExtra("displayName", "User${uuid.subSequence(0, 5)}")
+                                    .putExtra("displayName", "User-${uuid.subSequence(0, 5)}")
 
                                 pbLoading.visibility = View.GONE
 

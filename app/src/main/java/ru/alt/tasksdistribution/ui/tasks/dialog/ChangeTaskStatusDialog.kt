@@ -5,12 +5,9 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import ru.alt.tasksdistribution.R
 import ru.alt.tasksdistribution.requests.Http
-import ru.alt.tasksdistribution.ui.map.MapViewModel
-import ru.alt.tasksdistribution.ui.tasks.TasksViewModel
 import ru.alt.tasksdistribution.ui.tasks.data.Task
 import ru.alt.tasksdistribution.ui.tasks.data.TaskColors
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
@@ -49,9 +46,6 @@ class ChangeTaskStatusDialog(
         tvDialogTaskTheme.text = holder.tvTaskTheme.text
         tvStatusValue.text = holder.tvTaskStatus.text
 
-        val taskViewModel = ViewModelProvider(activity)[TasksViewModel::class.java]
-        val mapViewModel = ViewModelProvider(activity)[MapViewModel::class.java]
-
         // enable buttons
         when (tvStatusValue.text) {
             TaskStatus.ASSIGNED.name -> btnOnWay.isEnabled = true
@@ -64,6 +58,8 @@ class ChangeTaskStatusDialog(
 
         // set click event handlers
         btnOnWay.setOnClickListener {
+
+            // set new values
             val newStatus = TaskStatus.ON_WAY
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
@@ -71,125 +67,43 @@ class ChangeTaskStatusDialog(
 
             task.timestamps.onWayTimestamp = Date().toString()
 
-            val tl = arrayListOf<Task>()
-            val mainTl = arrayListOf<Task>()
-            taskViewModel.taskList.observe(activity) {
-                mainTl.addAll(it)
-            }
-
-            for (t in mainTl) {
-                if (task.taskAssignmentId == t.taskAssignmentId) {
-                    tl.add(Task(
-                        t.taskId,
-                        t.taskName,
-                        t.taskAssignmentId,
-                        t.priorityName,
-                        TaskStatus.ON_WAY,
-                        task.timestamps,
-                        t.longitude,
-                        t.latitude,
-                        TaskColors.YELLOW
-                    ))
-                } else {
-                    tl.add(t)
-                }
-            }
-
-            taskViewModel.setTaskList(tl)
-            mapViewModel.setTaskList(tl)
-
             // send request
-            with (Http(activity)) {
-                setStatus(task.taskId.toString(), uuid, newStatus, "")
-            }
+            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, "") }
 
             dismiss()
         }
 
         btnInProgress.setOnClickListener {
+
+            // set new values
             val newStatus = TaskStatus.IN_PROGRESS
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
             holder.tvTaskStatus.setTextColor(TaskColors.BLUE.toInt())
             task.timestamps.startTimestamp = Date().toString()
 
-
-            val tl = arrayListOf<Task>()
-            val mainTl = arrayListOf<Task>()
-            taskViewModel.taskList.observe(activity) {
-                mainTl.addAll(it)
-            }
-
-            for (t in mainTl) {
-                if (task.taskAssignmentId == t.taskAssignmentId) {
-                    tl.add(Task(
-                        t.taskId,
-                        t.taskName,
-                        t.taskAssignmentId,
-                        t.priorityName,
-                        TaskStatus.IN_PROGRESS,
-                        task.timestamps,
-                        t.longitude,
-                        t.latitude,
-                        TaskColors.BLUE
-                    ))
-                } else {
-                    tl.add(t)
-                }
-            }
-
-            taskViewModel.setTaskList(tl)
-            mapViewModel.setTaskList(tl)
-
             // send request
-            with (Http(activity)) {
-                setStatus(task.taskId.toString(), uuid, newStatus, "")
-            }
+            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, "") }
 
             dismiss()
         }
+
         btnDone.setOnClickListener {
+
+            // set new values
             val newStatus = TaskStatus.DONE
             tvStatusValue.text = newStatus.name
             holder.tvTaskStatus.text = newStatus.name
             holder.tvTaskStatus.setTextColor(TaskColors.GREEN.toInt())
             task.timestamps.completionTimestamp = Date().toString()
+
+            // save comment for completed task
             val note = when (etTaskComment.text.toString()) {
                 "" -> "Task finished"
                 else -> etTaskComment.text.toString()
             }
 
-
-            val tl = arrayListOf<Task>()
-            val mainTl = arrayListOf<Task>()
-            taskViewModel.taskList.observe(activity) {
-                mainTl.addAll(it)
-            }
-
-            for (t in mainTl) {
-                if (task.taskAssignmentId == t.taskAssignmentId) {
-                    tl.add(Task(
-                        t.taskId,
-                        t.taskName,
-                        t.taskAssignmentId,
-                        t.priorityName,
-                        TaskStatus.DONE,
-                        task.timestamps,
-                        t.longitude,
-                        t.latitude,
-                        TaskColors.GREEN
-                    ))
-                } else {
-                    tl.add(t)
-                }
-            }
-
-            taskViewModel.setTaskList(tl)
-            mapViewModel.setTaskList(tl)
-
-            with (Http(activity)) {
-                setStatus(task.taskId.toString(), uuid, newStatus, note)
-            }
+            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, note) }
 
             dismiss()
         }
