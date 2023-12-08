@@ -9,6 +9,7 @@ import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONArray
+import ru.alt.tasksdistribution.helpers.Storage
 import ru.alt.tasksdistribution.ui.tasks.data.TaskStatus
 
 class Http(private val context: Context) {
@@ -59,7 +60,7 @@ class Http(private val context: Context) {
                     jsonResponse = it
                 },
                 {
-                    Log.e(tag, "Error in request - ${it.message}")
+                    Log.e(tag, "Error in request - $it")
                 }
             ).also { add(it) }
 
@@ -69,7 +70,7 @@ class Http(private val context: Context) {
     fun setStatus(taskId: String, userId: String, newStatus: TaskStatus, note: String): RequestQueue {
         return Volley.newRequestQueue(context).apply {
             this.cancelAll("DONE")
-            val url = "$serverIP/task/${taskId}"
+            val url = "$serverIP/task/${taskId}?token=${Storage.userId}&status=${newStatus.name}&note=$note"
 
             object : StringRequest(
                 Method.POST,

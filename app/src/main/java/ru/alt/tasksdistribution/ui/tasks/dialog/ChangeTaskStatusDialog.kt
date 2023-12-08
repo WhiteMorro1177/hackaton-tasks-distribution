@@ -1,10 +1,13 @@
 package ru.alt.tasksdistribution.ui.tasks.dialog
 
 import android.app.Dialog
+import android.app.DownloadManager.Request
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.FragmentActivity
+import com.android.volley.RequestQueue
 import com.google.android.material.textfield.TextInputLayout
 import ru.alt.tasksdistribution.R
 import ru.alt.tasksdistribution.requests.Http
@@ -68,9 +71,16 @@ class ChangeTaskStatusDialog(
             task.timestamps.onWayTimestamp = Date().toString()
 
             // send request
-            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, "") }
-
-            dismiss()
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, "").also {
+                    it.addRequestEventListener { _, event ->
+                        if (event == RequestQueue.RequestEvent.REQUEST_FINISHED) {
+                            Log.d("ChangeTaskStatusDialog", "Status added")
+                            this@ChangeTaskStatusDialog.dismiss()
+                        }
+                    }
+                }
+            }
         }
 
         btnInProgress.setOnClickListener {
@@ -83,9 +93,16 @@ class ChangeTaskStatusDialog(
             task.timestamps.startTimestamp = Date().toString()
 
             // send request
-            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, "") }
-
-            dismiss()
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, "").also {
+                    it.addRequestEventListener { _, event ->
+                        if (event == RequestQueue.RequestEvent.REQUEST_FINISHED) {
+                            Log.d("ChangeTaskStatusDialog", "Status added")
+                            this@ChangeTaskStatusDialog.dismiss()
+                        }
+                    }
+                }
+            }
         }
 
         btnDone.setOnClickListener {
@@ -103,9 +120,16 @@ class ChangeTaskStatusDialog(
                 else -> etTaskComment.text.toString()
             }
 
-            with (Http(activity)) { setStatus(task.taskId.toString(), uuid, newStatus, note) }
-
-            dismiss()
+            with (Http(activity)) {
+                setStatus(task.taskId.toString(), uuid, newStatus, note).also {
+                    it.addRequestEventListener { _, event ->
+                        if (event == RequestQueue.RequestEvent.REQUEST_FINISHED) {
+                            Log.d("ChangeTaskStatusDialog", "Status added")
+                            this@ChangeTaskStatusDialog.dismiss()
+                        }
+                    }
+                }
+            }
         }
     }
 }

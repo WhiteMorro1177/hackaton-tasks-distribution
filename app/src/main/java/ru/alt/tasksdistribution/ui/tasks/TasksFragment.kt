@@ -21,7 +21,6 @@ import ru.alt.tasksdistribution.ui.tasks.data.TasksAdapter
 class TasksFragment : Fragment() {
     private val tag = this::class.simpleName
 
-
     private var _binding: FragmentTasksBinding? = null
     private val binding get() = _binding!!
 
@@ -56,11 +55,22 @@ class TasksFragment : Fragment() {
                             for (index in 0 until this.jsonResponse!!.length()) {
                                 Log.d(tag, "Item $index: data: ${this.jsonResponse!![index]} ")
 
-                                taskList.add(
-                                    TaskConverter.convert(
-                                        Gson().fromJson(jsonResponse!![index].toString(), TaskDTO::class.java)
+                                val parsedTask: Task = TaskConverter.convert(
+                                    Gson().fromJson(
+                                        jsonResponse!![index].toString(),
+                                        TaskDTO::class.java
                                     )
                                 )
+
+                                taskList.add(parsedTask);
+
+                                // check copies of tasks
+//                                val tasksIds = taskList.map { task -> task.taskAssignmentId; }
+//                                if (parsedTask.taskAssignmentId !in tasksIds) {
+//                                    Log.d(tag, "Item with ID = ${parsedTask.taskId} added to list")
+//                                    taskList.add(parsedTask)
+//                                }
+
                             }
 
                             // fill recycle view
